@@ -245,6 +245,7 @@ body {
   background-color: var(--color-secondary);
   transition: all 0.3s;
   border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .game-card:hover {
@@ -324,6 +325,16 @@ body {
   color: var(--color-gold);
   font-size: 0.75rem;
   font-weight: bold;
+}
+
+.game-rtp {
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: white;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
 }
 
 /* Navegação Inferior */

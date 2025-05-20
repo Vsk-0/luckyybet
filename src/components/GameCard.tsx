@@ -6,6 +6,7 @@ interface GameCardProps {
   odds: string;
   category: string;
   provider: string;
+  rtp?: number;
   isFavorite: boolean;
   onFavoriteToggle: (id: number) => void;
   onGameSelect: (id: number) => void;
@@ -17,6 +18,7 @@ const GameCard: React.FC<GameCardProps> = ({
   odds,
   category,
   provider,
+  rtp,
   isFavorite,
   onFavoriteToggle,
   onGameSelect
@@ -41,27 +43,32 @@ const GameCard: React.FC<GameCardProps> = ({
     };
   }, [id]);
   
-  // Determinar imagem baseada no nome do jogo
+  // Determinar imagem baseada no nome do jogo com efeitos visuais aprimorados
   const getGameImage = () => {
+    let imageUrl = '';
+    
     if (name.toLowerCase().includes('rabbit')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-rabbit-mascot_194935-124.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-rabbit-mascot_194935-124.jpg';
     } else if (name.toLowerCase().includes('tiger')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-tiger-mascot_194935-126.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-tiger-mascot_194935-126.jpg';
     } else if (name.toLowerCase().includes('dragon')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-dragon-mascot_194935-128.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-dragon-mascot_194935-128.jpg';
     } else if (name.toLowerCase().includes('ox')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-ox-mascot_194935-129.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-ox-mascot_194935-129.jpg';
     } else if (name.toLowerCase().includes('mouse')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-mouse-mascot_194935-130.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-mouse-mascot_194935-130.jpg';
     } else if (name.toLowerCase().includes('fish')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-fish-mascot_194935-131.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-fish-mascot_194935-131.jpg';
     } else if (name.toLowerCase().includes('lion')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-lion-mascot_194935-132.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-lion-mascot_194935-132.jpg';
     } else if (name.toLowerCase().includes('crash')) {
-      return 'https://img.freepik.com/premium-vector/cartoon-rocket-mascot_194935-133.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-rocket-mascot_194935-133.jpg';
     } else {
-      return 'https://img.freepik.com/premium-vector/cartoon-slot-machine-mascot_194935-134.jpg';
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-slot-machine-mascot_194935-134.jpg';
     }
+    
+    // Adicionar efeitos visuais para melhorar a aparência
+    return imageUrl;
   };
   
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -75,7 +82,11 @@ const GameCard: React.FC<GameCardProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onGameSelect(id)}
-      style={{ transform: isHovered ? 'translateY(-5px) scale(1.02)' : 'translateY(0) scale(1)' }}
+      style={{ 
+        transform: isHovered ? 'translateY(-5px) scale(1.02)' : 'translateY(0) scale(1)',
+        boxShadow: isHovered ? '0 10px 20px rgba(255, 215, 0, 0.2)' : 'none',
+        border: isHovered ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 215, 0, 0.2)'
+      }}
     >
       <div className="game-provider">
         {provider}
@@ -125,9 +136,16 @@ const GameCard: React.FC<GameCardProps> = ({
         
         <div 
           className="game-overlay"
-          style={{ opacity: isHovered ? 1 : 0 }}
+          style={{ 
+            opacity: isHovered ? 1 : 0,
+            background: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8))'
+          }}
         >
-          <button className="btn-primary px-4 py-2 text-sm">
+          <button className="btn-primary px-4 py-2 text-sm" style={{
+            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
+          }}>
             Jogar Agora
           </button>
         </div>
@@ -135,7 +153,18 @@ const GameCard: React.FC<GameCardProps> = ({
       
       <div className="game-name">
         {name}
-        <div className="game-odds">{odds}</div>
+        <div className="flex justify-between items-center mt-1">
+          <div className="game-odds">{odds}</div>
+          {rtp && (
+            <div className={`game-rtp ${
+              rtp >= 95 ? 'bg-green-500' : 
+              rtp >= 90 ? 'bg-yellow-500' : 
+              'bg-red-500'
+            }`}>
+              {rtp}%
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

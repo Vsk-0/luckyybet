@@ -36,15 +36,21 @@ function App() {
   }, [])
   
   const games = [
-    { id: 1, name: 'Fortune Rabbit', odds: '1.95', category: 'popular', provider: 'PG' },
-    { id: 2, name: 'Fortune Tiger', odds: '2.5x', category: 'popular', provider: 'PG' },
-    { id: 3, name: 'Fortune Dragon', odds: '3.0x', category: 'popular', provider: 'PG' },
-    { id: 4, name: 'Fortune Ox', odds: '2.10', category: 'popular', provider: 'PG' },
-    { id: 5, name: 'Fortune Mouse', odds: '5.0x', category: 'slots', provider: 'PG' },
-    { id: 6, name: 'Fortune Fish', odds: '4.0x', category: 'slots', provider: 'PG' },
-    { id: 7, name: 'Fortune Lion', odds: '1.85', category: 'slots', provider: 'PG' },
-    { id: 8, name: 'Crash Game', odds: '10.0x', category: 'crash', provider: 'WG' },
-    { id: 9, name: 'Bingo Royal', odds: '3.5x', category: 'bingo', provider: 'CP' },
+    { id: 1, name: 'Fortune Rabbit', odds: '1.95', category: 'popular', provider: 'PG', rtp: 95 },
+    { id: 2, name: 'Fortune Tiger', odds: '2.5x', category: 'popular', provider: 'PG', rtp: 94 },
+    { id: 3, name: 'Fortune Dragon', odds: '3.0x', category: 'popular', provider: 'PG', rtp: 96 },
+    { id: 4, name: 'Fortune Ox', odds: '2.10', category: 'popular', provider: 'PG', rtp: 93 },
+    { id: 5, name: 'Fortune Mouse', odds: '5.0x', category: 'slots', provider: 'PG', rtp: 97 },
+    { id: 6, name: 'Fortune Fish', odds: '4.0x', category: 'slots', provider: 'PG', rtp: 92 },
+    { id: 7, name: 'Fortune Lion', odds: '1.85', category: 'slots', provider: 'PG', rtp: 91 },
+    { id: 8, name: 'Crash Game', odds: '10.0x', category: 'crash', provider: 'WG', rtp: 98 },
+    { id: 9, name: 'Bingo Royal', odds: '3.5x', category: 'bingo', provider: 'CP', rtp: 90 },
+    { id: 10, name: 'Ganesha Fortune', odds: '4.2x', category: 'popular', provider: 'PG', rtp: 95 },
+    { id: 11, name: 'Dragon Tiger', odds: '2.8x', category: 'popular', provider: 'PG', rtp: 93 },
+    { id: 12, name: 'Buffalo King', odds: '5.5x', category: 'slots', provider: 'Pragmatic', rtp: 96 },
+    { id: 13, name: 'Sweet Bonanza', odds: '6.0x', category: 'slots', provider: 'Pragmatic', rtp: 97 },
+    { id: 14, name: 'Piggy Gold', odds: '3.7x', category: 'slots', provider: 'PG', rtp: 94 },
+    { id: 15, name: 'Mayan Cache', odds: '4.5x', category: 'slots', provider: 'PG', rtp: 95 }
   ]
 
   const filteredGames = activeTab === 'popular' 
