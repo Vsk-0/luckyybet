@@ -261,8 +261,8 @@ function App() {
                     id={game.id}
                     name={game.name}
                     odds={game.odds}
-                    category={game.category}
                     provider={game.provider}
+                    rtp={game.rtp}
                     isFavorite={favorites.includes(game.id)}
                     onFavoriteToggle={toggleFavorite}
                     onGameSelect={handleGameSelect}

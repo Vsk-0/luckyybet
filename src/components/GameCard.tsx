@@ -4,7 +4,6 @@ interface GameCardProps {
   id: number;
   name: string;
   odds: string;
-  category: string;
   provider: string;
   rtp?: number;
   isFavorite: boolean;
@@ -16,7 +15,6 @@ const GameCard: React.FC<GameCardProps> = ({
   id,
   name,
   odds,
-  category,
   provider,
   rtp,
   isFavorite,
@@ -63,17 +61,28 @@ const GameCard: React.FC<GameCardProps> = ({
       imageUrl = 'https://img.freepik.com/premium-vector/cartoon-lion-mascot_194935-132.jpg';
     } else if (name.toLowerCase().includes('crash')) {
       imageUrl = 'https://img.freepik.com/premium-vector/cartoon-rocket-mascot_194935-133.jpg';
+    } else if (name.toLowerCase().includes('ganesha')) {
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-elephant-god-ganesha-mascot_194935-135.jpg';
+    } else if (name.toLowerCase().includes('bonanza')) {
+      imageUrl = 'https://img.freepik.com/premium-vector/cartoon-candy-slot-mascot_194935-136.jpg';
     } else {
       imageUrl = 'https://img.freepik.com/premium-vector/cartoon-slot-machine-mascot_194935-134.jpg';
     }
     
-    // Adicionar efeitos visuais para melhorar a aparência
     return imageUrl;
   };
   
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onFavoriteToggle(id);
+  };
+
+  // Determinar a classe da barra de RTP baseada no valor
+  const getRtpBarClass = () => {
+    if (!rtp) return '';
+    if (rtp >= 85) return 'rtp-bar-high';
+    if (rtp >= 70) return 'rtp-bar-medium';
+    return 'rtp-bar-low';
   };
   
   return (
@@ -82,11 +91,6 @@ const GameCard: React.FC<GameCardProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onGameSelect(id)}
-      style={{ 
-        transform: isHovered ? 'translateY(-5px) scale(1.02)' : 'translateY(0) scale(1)',
-        boxShadow: isHovered ? '0 10px 20px rgba(255, 215, 0, 0.2)' : 'none',
-        border: isHovered ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 215, 0, 0.2)'
-      }}
     >
       <div className="game-provider">
         {provider}
@@ -103,10 +107,6 @@ const GameCard: React.FC<GameCardProps> = ({
           fill={isFavorite ? "currentColor" : "none"} 
           stroke="currentColor" 
           className="w-5 h-5"
-          style={{ 
-            filter: isFavorite ? 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.7))' : 'none',
-            transition: 'all 0.3s ease'
-          }}
         >
           <path 
             strokeLinecap="round" 
@@ -127,25 +127,11 @@ const GameCard: React.FC<GameCardProps> = ({
             src={getGameImage()} 
             alt={name} 
             className="game-image"
-            style={{ 
-              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-              transition: 'transform 0.3s ease'
-            }}
           />
         )}
         
-        <div 
-          className="game-overlay"
-          style={{ 
-            opacity: isHovered ? 1 : 0,
-            background: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8))'
-          }}
-        >
-          <button className="btn-primary px-4 py-2 text-sm" style={{
-            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
-          }}>
+        <div className="game-overlay">
+          <button className="btn-primary px-4 py-2 text-sm">
             Jogar Agora
           </button>
         </div>
@@ -153,19 +139,13 @@ const GameCard: React.FC<GameCardProps> = ({
       
       <div className="game-name">
         {name}
-        <div className="flex justify-between items-center mt-1">
-          <div className="game-odds">{odds}</div>
-          {rtp && (
-            <div className={`game-rtp ${
-              rtp >= 95 ? 'bg-green-500' : 
-              rtp >= 90 ? 'bg-yellow-500' : 
-              'bg-red-500'
-            }`}>
-              {rtp}%
-            </div>
-          )}
-        </div>
       </div>
+      
+      {rtp && (
+        <div className={`rtp-bar ${getRtpBarClass()}`}>
+          <div className="rtp-value">{rtp}%</div>
+        </div>
+      )}
     </div>
   );
 };

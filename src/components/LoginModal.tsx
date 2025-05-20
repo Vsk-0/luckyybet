@@ -4,9 +4,10 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: (username: string, password: string) => void;
+  onRegisterClick?: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin, onRegisterClick }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +99,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
           <div className="mt-4 text-center">
             <p className="text-muted-foreground">
               Não tem uma conta?{' '}
-              <a href="#" className="text-primary hover:underline">
+              <a href="#" className="text-primary hover:underline" onClick={(e) => {
+                e.preventDefault();
+                if (onRegisterClick) onRegisterClick();
+              }}>
                 Cadastre-se
               </a>
             </p>

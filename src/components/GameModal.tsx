@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 interface GameModalProps {
   isOpen: boolean;
   onClose: () => void;
-  gameId: number;
   gameName: string;
   gameProvider: string;
 }
@@ -11,7 +10,6 @@ interface GameModalProps {
 const GameModal: React.FC<GameModalProps> = ({
   isOpen,
   onClose,
-  gameId,
   gameName,
   gameProvider
 }) => {
@@ -21,6 +19,7 @@ const GameModal: React.FC<GameModalProps> = ({
   const [winAmount, setWinAmount] = useState(0);
   const [spinResult, setSpinResult] = useState<string[]>([]);
   const [isWin, setIsWin] = useState(false);
+  const [balance, setBalance] = useState(1000);
   
   // Simular carregamento do jogo
   useEffect(() => {
@@ -38,11 +37,18 @@ const GameModal: React.FC<GameModalProps> = ({
   }, [isOpen]);
   
   const handleSpin = () => {
+    if (balance < betAmount) {
+      alert('Saldo insuficiente para apostar');
+      return;
+    }
+    
+    // Deduzir aposta do saldo
+    setBalance(prev => prev - betAmount);
     setGameState('spinning');
     
     // Simular giro e resultado
     setTimeout(() => {
-      const symbols = ['🐯', '🐰', '🐲', '🐂', '🐁', '🐠', '7️⃣', '💰'];
+      const symbols = getGameSymbols();
       const result = Array(3).fill(null).map(() => symbols[Math.floor(Math.random() * symbols.length)]);
       
       // Simular vitória ocasional (1 em 3 chance)
@@ -57,7 +63,9 @@ const GameModal: React.FC<GameModalProps> = ({
         
         // Calcular valor ganho (entre 1.5x e 10x a aposta)
         const multiplier = 1.5 + Math.random() * 8.5;
-        setWinAmount(Math.round(betAmount * multiplier * 100) / 100);
+        const winValue = Math.round(betAmount * multiplier * 100) / 100;
+        setWinAmount(winValue);
+        setBalance(prev => prev + winValue);
         setIsWin(true);
       } else {
         setWinAmount(0);
@@ -74,6 +82,25 @@ const GameModal: React.FC<GameModalProps> = ({
     }, 2000);
   };
   
+  const getGameSymbols = () => {
+    // Retornar símbolos específicos baseados no nome do jogo
+    if (gameName.toLowerCase().includes('tiger')) {
+      return ['🐯', '💰', '🧧', '🏮', '🎋', '🎍', '7️⃣', '🎲'];
+    } else if (gameName.toLowerCase().includes('rabbit')) {
+      return ['🐰', '🥕', '🌙', '🌟', '🎭', '🎪', '7️⃣', '🎲'];
+    } else if (gameName.toLowerCase().includes('dragon')) {
+      return ['🐲', '🔥', '💎', '🏆', '👑', '🧿', '7️⃣', '🎲'];
+    } else if (gameName.toLowerCase().includes('ox')) {
+      return ['🐂', '🌾', '🌿', '🍀', '🧧', '🎋', '7️⃣', '🎲'];
+    } else if (gameName.toLowerCase().includes('ganesha')) {
+      return ['🐘', '🕉️', '💐', '🪔', '🧿', '🎭', '7️⃣', '🎲'];
+    } else if (gameName.toLowerCase().includes('bonanza')) {
+      return ['🍬', '🍭', '🍫', '🧁', '🍪', '🎂', '7️⃣', '🎲'];
+    } else {
+      return ['💰', '💎', '🎲', '🎰', '7️⃣', '👑', '🏆', '💵'];
+    }
+  };
+  
   const increaseBet = () => {
     setBetAmount(prev => Math.min(prev + 1, 100));
   };
@@ -83,7 +110,7 @@ const GameModal: React.FC<GameModalProps> = ({
   };
   
   const maxBet = () => {
-    setBetAmount(100);
+    setBetAmount(Math.min(100, balance));
   };
   
   if (!isOpen) return null;
@@ -108,17 +135,15 @@ const GameModal: React.FC<GameModalProps> = ({
         
         <div className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="text-center mb-4">
-                <span className="inline-block text-4xl font-bold text-primary animate-pulse">PG</span>
-              </div>
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <div className="pg-game-loading">
+              <div className="pg-game-logo">PG</div>
+              <div className="pg-game-spinner"></div>
               <p className="mt-4 text-muted-foreground">Carregando jogo...</p>
             </div>
           ) : (
-            <div className="game-container">
+            <div className="pg-game-container">
               {/* Tela do jogo */}
-              <div className="game-screen bg-black relative overflow-hidden" style={{height: '240px'}}>
+              <div className="pg-game-screen">
                 {gameState === 'ready' && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -127,7 +152,10 @@ const GameModal: React.FC<GameModalProps> = ({
                         <img 
                           src={`https://img.freepik.com/premium-vector/cartoon-${gameName.toLowerCase().includes('tiger') ? 'tiger' : 
                                  gameName.toLowerCase().includes('rabbit') ? 'rabbit' : 
-                                 gameName.toLowerCase().includes('dragon') ? 'dragon' : 'animal'}-mascot.jpg`} 
+                                 gameName.toLowerCase().includes('dragon') ? 'dragon' : 
+                                 gameName.toLowerCase().includes('ox') ? 'ox' :
+                                 gameName.toLowerCase().includes('ganesha') ? 'elephant-god-ganesha' :
+                                 gameName.toLowerCase().includes('bonanza') ? 'candy-slot' : 'slot-machine'}-mascot.jpg`} 
                           alt={gameName}
                           className="h-24 w-24 object-cover rounded-full border-2 border-primary"
                         />
@@ -139,9 +167,15 @@ const GameModal: React.FC<GameModalProps> = ({
                 {gameState === 'spinning' && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex space-x-4">
-                      <div className="animate-spin text-5xl">🎰</div>
-                      <div className="animate-spin text-5xl" style={{animationDelay: '0.1s'}}>🎰</div>
-                      <div className="animate-spin text-5xl" style={{animationDelay: '0.2s'}}>🎰</div>
+                      <div className="slot-reel">
+                        <div className="slot-symbol animate-spin" style={{animationDuration: '0.5s'}}>🎰</div>
+                      </div>
+                      <div className="slot-reel">
+                        <div className="slot-symbol animate-spin" style={{animationDuration: '0.7s'}}>🎰</div>
+                      </div>
+                      <div className="slot-reel">
+                        <div className="slot-symbol animate-spin" style={{animationDuration: '0.9s'}}>🎰</div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -155,9 +189,24 @@ const GameModal: React.FC<GameModalProps> = ({
                     </div>
                     
                     {isWin ? (
-                      <div className="text-center">
-                        <div className="text-primary text-2xl font-bold animate-bounce">VOCÊ GANHOU!</div>
-                        <div className="text-primary text-xl">R$ {winAmount.toFixed(2)}</div>
+                      <div className="slot-win">
+                        <div className="slot-win-text">VOCÊ GANHOU!</div>
+                        <div className="slot-win-amount">R$ {winAmount.toFixed(2)}</div>
+                        <div className="particles-container">
+                          {Array(20).fill(0).map((_, i) => (
+                            <div 
+                              key={i}
+                              className="particle"
+                              style={{
+                                width: `${Math.random() * 10 + 5}px`,
+                                height: `${Math.random() * 10 + 5}px`,
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`,
+                                animation: `float ${Math.random() * 3 + 2}s linear infinite`
+                              }}
+                            />
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center">
@@ -169,35 +218,35 @@ const GameModal: React.FC<GameModalProps> = ({
               </div>
               
               {/* Controles do jogo */}
-              <div className="game-controls p-4 bg-secondary border-t border-primary/20">
-                <div className="flex justify-between items-center mb-4">
+              <div className="pg-game-controls">
+                <div className="pg-game-balance">
                   <div>
-                    <p className="text-xs text-muted-foreground">Saldo</p>
-                    <p className="text-primary font-bold">R$ 1000.00</p>
+                    <p className="pg-game-balance-label">Saldo</p>
+                    <p className="pg-game-balance-value">R$ {balance.toFixed(2)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Último Ganho</p>
+                    <p className="pg-game-balance-label">Último Ganho</p>
                     <p className={`font-bold ${isWin ? 'text-primary' : 'text-muted-foreground'}`}>
                       R$ {winAmount.toFixed(2)}
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between mb-4">
+                <div className="pg-game-bet-controls">
                   <div className="flex items-center">
                     <button 
                       onClick={decreaseBet}
-                      className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-l"
+                      className="pg-game-bet-button"
                       disabled={gameState === 'spinning'}
                     >
                       -
                     </button>
-                    <div className="bg-black/50 text-white px-4 py-1">
+                    <div className="pg-game-bet-value">
                       R$ {betAmount.toFixed(2)}
                     </div>
                     <button 
                       onClick={increaseBet}
-                      className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-r"
+                      className="pg-game-bet-button"
                       disabled={gameState === 'spinning'}
                     >
                       +
@@ -216,7 +265,7 @@ const GameModal: React.FC<GameModalProps> = ({
                 <button 
                   onClick={handleSpin}
                   disabled={gameState === 'spinning'}
-                  className={`w-full py-3 rounded-lg font-bold text-black ${gameState === 'spinning' ? 'bg-gray-500' : 'bg-primary hover:bg-primary/90'} transition-colors`}
+                  className={`pg-game-spin-button ${gameState === 'spinning' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {gameState === 'spinning' ? 'GIRANDO...' : 'GIRAR'}
                 </button>
