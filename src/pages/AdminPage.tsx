@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore'; // Import orderBy
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge'; // Import Badge component
+import { Badge } from '@/components/ui/badge';
 
 interface WithdrawRequest {
   id: string;
@@ -25,20 +25,23 @@ const AdminPage: React.FC = () => {
     const fetchRequests = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, 'withdrawRequests'), where('status', '==', 'pending'));
+        // Busca na coleção principal /withdrawRequests, ordenando pelos mais recentes
+        const q = query(
+          collection(db, 'withdrawRequests'), 
+          where('status', '==', 'pending'),
+          orderBy('requestedAt', 'desc') // Ordena pelos mais recentes primeiro
+        );
         const querySnapshot = await getDocs(q);
         const fetchedRequests: WithdrawRequest[] = [];
         querySnapshot.forEach((doc) => {
           fetchedRequests.push({ id: doc.id, ...doc.data() } as WithdrawRequest);
         });
-        // Sort requests by date, newest first
-        fetchedRequests.sort((a, b) => b.requestedAt?.toDate() - a.requestedAt?.toDate());
         setRequests(fetchedRequests);
       } catch (error) {
         console.error('Erro ao buscar solicitações de saque:', error);
         toast({
           title: 'Erro',
-          description: 'Não foi possível carregar as solicitações de saque.',
+          description: 'Não foi possível carregar as solicitações de saque pendentes.',
           variant: 'destructive',
         });
       } finally {
@@ -52,14 +55,12 @@ const AdminPage: React.FC = () => {
   const handleUpdateRequest = async (id: string, newStatus: 'approved' | 'rejected') => {
     setProcessingId(id);
     try {
+      // Atualiza o documento na coleção principal /withdrawRequests
       const requestDocRef = doc(db, 'withdrawRequests', id);
       await updateDoc(requestDocRef, { status: newStatus });
 
-      // Update local state
-      setRequests(prevRequests =>
-        prevRequests.map(req => (req.id === id ? { ...req, status: newStatus } : req))
-                    .filter(req => req.status === 'pending') // Keep only pending requests visible after action
-      );
+      // Remove a solicitação da lista local após aprovar/rejeitar
+      setRequests(prevRequests => prevRequests.filter(req => req.id !== id));
 
       toast({
         title: 'Sucesso',
@@ -101,12 +102,13 @@ const AdminPage: React.FC = () => {
             {requests.map((req) => (
               <TableRow key={req.id}>
                 <TableCell>{req.requestedAt?.toDate()?.toLocaleString('pt-BR') ?? 'N/A'}</TableCell>
-                <TableCell className="truncate max-w-xs">{req.userId}</TableCell>
+                {/* Truncar User ID para melhor visualização se necessário */}
+                <TableCell className="truncate max-w-[100px]" title={req.userId}>{req.userId}</TableCell> 
                 <TableCell>{req.amount.toFixed(2)}</TableCell>
                 <TableCell>{req.pixKey}</TableCell>
                 <TableCell>
-                  <Badge variant={req.status === 'pending' ? 'secondary' : req.status === 'approved' ? 'default' : 'destructive'}>
-                    {req.status}
+                  <Badge variant={'secondary'}> {/* Sempre será pending aqui */}
+                    Pendente
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">

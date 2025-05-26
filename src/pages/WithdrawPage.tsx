@@ -1,119 +1,94 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { db } from '../firebaseConfig'; // Assuming firebaseConfig exports db
+import { db } from '../firebaseConfig';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast'; // Assuming useToast hook exists
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const WithdrawPage: React.FC = () => {
+  const { currentUser } = useAuth();
   const [amount, setAmount] = useState<string>('');
   const [pixKey, setPixKey] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const { currentUser } = useAuth();
   const { toast } = useToast();
 
   const handleWithdrawRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
     if (!currentUser) {
-      toast({
-        title: 'Erro',
-        description: 'Você precisa estar logado para solicitar um saque.',
-        variant: 'destructive',
-      });
-      setLoading(false);
+      toast({ title: 'Erro', description: 'Você precisa estar logado para solicitar um saque.', variant: 'destructive' });
+      return;
+    }
+    if (!amount || !pixKey || parseFloat(amount) <= 0) {
+      toast({ title: 'Erro', description: 'Por favor, preencha o valor e a chave Pix corretamente.', variant: 'destructive' });
       return;
     }
 
-    const withdrawAmount = parseFloat(amount);
-    if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
-      toast({
-        title: 'Erro',
-        description: 'Por favor, insira um valor de saque válido.',
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
-    }
-
-    // TODO: Add logic to check if user has sufficient balance before proceeding
-
-    if (!pixKey.trim()) {
-        toast({
-            title: 'Erro',
-            description: 'Por favor, insira sua chave Pix.',
-            variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-    }
-
+    setLoading(true);
     try {
-      // Add withdrawal request to Firestore
+      // Salva na coleção principal /withdrawRequests
       await addDoc(collection(db, 'withdrawRequests'), {
         userId: currentUser.uid,
-        amount: withdrawAmount,
-        pixKey: pixKey.trim(),
-        status: 'pending', // Initial status
+        amount: parseFloat(amount),
+        pixKey: pixKey,
+        status: 'pending', // Status inicial sempre pendente
         requestedAt: serverTimestamp(),
       });
 
-      toast({
-        title: 'Sucesso',
-        description: 'Sua solicitação de saque foi enviada com sucesso.',
-      });
+      toast({ title: 'Sucesso', description: 'Sua solicitação de saque foi enviada.' });
       setAmount('');
       setPixKey('');
     } catch (error) {
       console.error('Erro ao solicitar saque:', error);
-      toast({
-        title: 'Erro',
-        description: 'Ocorreu um erro ao processar sua solicitação. Tente novamente.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Ocorreu um erro ao enviar sua solicitação. Tente novamente.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Solicitar Saque</h1>
-      <form onSubmit={handleWithdrawRequest} className="space-y-4">
-        <div>
-          <Label htmlFor="amount">Valor do Saque (R$)</Label>
-          <Input
-            id="amount"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Ex: 50.00"
-            required
-            min="0.01" // Example minimum amount
-            step="0.01"
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label htmlFor="pixKey">Chave Pix</Label>
-          <Input
-            id="pixKey"
-            type="text"
-            value={pixKey}
-            onChange={(e) => setPixKey(e.target.value)}
-            placeholder="CPF, CNPJ, E-mail, Telefone ou Chave Aleatória"
-            required
-            className="mt-1"
-          />
-        </div>
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? 'Processando...' : 'Solicitar Saque'}
-        </Button>
-      </form>
-      {/* TODO: Display withdrawal history? */}
+    <div className="container mx-auto p-4 flex justify-center items-center min-h-[calc(100vh-10rem)]">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl">Solicitar Saque</CardTitle>
+          <CardDescription className="text-center">Insira o valor e sua chave Pix.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleWithdrawRequest} className="space-y-4">
+            <div>
+              <Label htmlFor="amount">Valor do Saque (R$)</Label>
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Ex: 50.00"
+                min="0.01"
+                step="0.01"
+                required
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="pixKey">Chave Pix</Label>
+              <Input
+                id="pixKey"
+                type="text"
+                value={pixKey}
+                onChange={(e) => setPixKey(e.target.value)}
+                placeholder="CPF, CNPJ, E-mail, Telefone ou Chave Aleatória"
+                required
+                disabled={loading}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Enviando...' : 'Solicitar Saque'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
