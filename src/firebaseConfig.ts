@@ -1,26 +1,29 @@
-// src/firebaseConfig.ts
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-// import { getAnalytics } from "firebase/analytics"; // Opcional
 
-// Configuração do Firebase fornecida pelo usuário
+// Configuração do Firebase usando variáveis de ambiente
+// Certifique-se de criar um arquivo .env na raiz do projeto com as seguintes variáveis:
+// VITE_FIREBASE_API_KEY=SUA_API_KEY
+// VITE_FIREBASE_AUTH_DOMAIN=SEU_AUTH_DOMAIN
+// VITE_FIREBASE_PROJECT_ID=SEU_PROJECT_ID
+// VITE_FIREBASE_STORAGE_BUCKET=SEU_STORAGE_BUCKET
+// VITE_FIREBASE_MESSAGING_SENDER_ID=SEU_SENDER_ID
+// VITE_FIREBASE_APP_ID=SEU_APP_ID
+
 const firebaseConfig = {
-  apiKey: "AIzaSyCIhss8yBh7LhNK3M_6FWXMLRQAO6JUKp0",
-  authDomain: "luckyybet0.firebaseapp.com",
-  projectId: "luckyybet0",
-  storageBucket: "luckyybet0.appspot.com",
-  messagingSenderId: "67706346924",
-  appId: "1:67706346924:web:5a71f0aab29c042119ee09",
-  measurementId: "G-BBH5HBNXM9" // Opcional
-  // databaseURL: "https://luckyybet0-default-rtdb.firebaseio.com" // Adicionar se for usar Realtime DB
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Inicializar Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-// const analytics = getAnalytics(app); // Opcional
 
-export { app, auth, db }; // Exportar instâncias necessárias
+export { app, auth, db };
 
