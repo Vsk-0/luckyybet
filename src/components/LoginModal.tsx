@@ -1,113 +1,141 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { createOrUpdateUser } from '../services/userService';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (username: string, password: string) => void;
-  onRegisterClick?: () => void;
+  onSwitchToRegister: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin, onRegisterClick }) => {
-  const [username, setUsername] = useState('');
+const LoginModal = ({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
 
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     
-    if (!username || !password) {
+    // Validação básica
+    if (!email || !password) {
       setError('Por favor, preencha todos os campos');
       return;
     }
     
-    setIsLoading(true);
+    if (!email.includes('@') || !email.includes('.')) {
+      setError('Por favor, insira um email válido');
+      return;
+    }
     
-    // Simulação de login
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin(username, password);
-    }, 1000);
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    
+    try {
+      setError('');
+      setLoading(true);
+      
+      // Login com Firebase
+      const user = await login(email, password);
+      
+      // Buscar ou criar dados do usuário no Firestore
+      await createOrUpdateUser(user.uid, user.email || '');
+      
+      onClose();
+    } catch (err: any) {
+      console.error('Erro no login:', err);
+      
+      // Tratamento de erros específicos do Firebase
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('Email ou senha incorretos');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Muitas tentativas. Tente novamente mais tarde');
+      } else {
+        setError('Falha ao fazer login. Tente novamente');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-secondary rounded-lg w-full max-w-md mx-4 overflow-hidden">
-        <div className="bg-primary/10 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-primary">Entrar</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-purple-500">Login</h2>
           <button 
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-gray-400 hover:text-white"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6">
-          {error && (
-            <div className="bg-red-500/20 text-red-400 p-3 rounded mb-4 text-sm">
-              {error}
-            </div>
-          )}
-          
+        {error && (
+          <div className="bg-red-900 text-white p-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username" className="block text-sm font-medium mb-1">
-              Nome de usuário
+            <label className="block text-gray-300 mb-2" htmlFor="email">
+              Email
             </label>
             <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3 bg-background border border-border rounded focus:border-primary focus:outline-none"
-              placeholder="Digite seu nome de usuário"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:border-purple-500"
+              placeholder="seu@email.com"
+              required
             />
           </div>
           
           <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
+            <label className="block text-gray-300 mb-2" htmlFor="password">
               Senha
             </label>
             <input
-              type="password"
               id="password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 bg-background border border-border rounded focus:border-primary focus:outline-none"
-              placeholder="Digite sua senha"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:border-purple-500"
+              placeholder="******"
+              required
             />
-            <div className="mt-1 text-right">
-              <a href="#" className="text-sm text-primary hover:underline">
-                Esqueceu a senha?
-              </a>
-            </div>
           </div>
           
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded transition-colors hover:bg-primary/90 disabled:opacity-70"
+            disabled={loading}
+            className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
-          
-          <div className="mt-4 text-center">
-            <p className="text-muted-foreground">
-              Não tem uma conta?{' '}
-              <a href="#" className="text-primary hover:underline" onClick={(e) => {
-                e.preventDefault();
-                if (onRegisterClick) onRegisterClick();
-              }}>
-                Cadastre-se
-              </a>
-            </p>
-          </div>
         </form>
+        
+        <div className="mt-4 text-center">
+          <p className="text-gray-400">
+            Não tem uma conta?{' '}
+            <button 
+              onClick={onSwitchToRegister}
+              className="text-purple-500 hover:text-purple-400 font-medium"
+            >
+              Registre-se
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

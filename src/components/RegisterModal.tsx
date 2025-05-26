@@ -1,291 +1,164 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { createOrUpdateUser } from '../services/userService';
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRegister: (formData: any) => void;
-  onLoginClick: () => void;
+  onSwitchToLogin: () => void;
 }
 
-const RegisterModal: React.FC<RegisterModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onRegister,
-  onLoginClick
-}) => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    email: '',
-    inviteCode: ''
-  });
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1);
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const { register } = useAuth();
 
-  if (!isOpen) return null;
-
-  const validateStep1 = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.username) {
-      newErrors.username = 'Nome de usuário é obrigatório';
-    } else if (formData.username.length < 4) {
-      newErrors.username = 'Nome de usuário deve ter pelo menos 4 caracteres';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'As senhas não coincidem';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep2 = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.phone && !formData.email) {
-      newErrors.contact = 'Informe pelo menos um telefone ou email';
-    }
-    
-    if (formData.phone && !/^\d{10,11}$/.test(formData.phone)) {
-      newErrors.phone = 'Telefone inválido';
-    }
-    
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-    
-    if (!agreeTerms) {
-      newErrors.terms = 'Você deve concordar com os termos';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleNextStep = () => {
-    if (validateStep1()) {
-      setStep(2);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (step === 1) {
-      handleNextStep();
+    // Validação básica
+    if (!email || !password || !confirmPassword) {
+      setError('Por favor, preencha todos os campos');
       return;
     }
     
-    if (validateStep2()) {
-      setIsLoading(true);
+    if (!email.includes('@') || !email.includes('.')) {
+      setError('Por favor, insira um email válido');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem');
+      return;
+    }
+    
+    try {
+      setError('');
+      setLoading(true);
       
-      // Simulação de registro
-      setTimeout(() => {
-        setIsLoading(false);
-        onRegister(formData);
-      }, 1500);
+      // Registro com Firebase
+      const user = await register(email, password);
+      
+      // Criar dados do usuário no Firestore
+      await createOrUpdateUser(user.uid, user.email || '');
+      
+      onClose();
+    } catch (err: any) {
+      console.error('Erro no registro:', err);
+      
+      // Tratamento de erros específicos do Firebase
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este email já está em uso');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Email inválido');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Senha muito fraca');
+      } else {
+        setError('Falha ao criar conta. Tente novamente');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header bg-primary/10">
-          <h2 className="modal-title">Cadastre-se</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-purple-500">Criar Conta</h2>
           <button 
             onClick={onClose}
-            className="modal-close"
+            className="text-gray-400 hover:text-white"
           >
-            ×
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6">
-          {step === 1 ? (
-            <>
-              <div className="form-group">
-                <label htmlFor="username" className="form-label">
-                  Nome de usuário
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Digite seu nome de usuário"
-                />
-                {errors.username && (
-                  <div className="form-error">{errors.username}</div>
-                )}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Senha
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Digite sua senha"
-                />
-                {errors.password && (
-                  <div className="form-error">{errors.password}</div>
-                )}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="confirmPassword" className="form-label">
-                  Confirmar Senha
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Confirme sua senha"
-                />
-                {errors.confirmPassword && (
-                  <div className="form-error">{errors.confirmPassword}</div>
-                )}
-              </div>
-              
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="w-full btn-primary mt-4"
-              >
-                Próximo
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="form-group">
-                <label htmlFor="phone" className="form-label">
-                  Telefone
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Digite seu telefone"
-                />
-                {errors.phone && (
-                  <div className="form-error">{errors.phone}</div>
-                )}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  Email (opcional)
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Digite seu email"
-                />
-                {errors.email && (
-                  <div className="form-error">{errors.email}</div>
-                )}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="inviteCode" className="form-label">
-                  Código de Convite (opcional)
-                </label>
-                <input
-                  type="text"
-                  id="inviteCode"
-                  name="inviteCode"
-                  value={formData.inviteCode}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Digite o código de convite"
-                />
-              </div>
-              
-              <div className="form-group">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="agreeTerms"
-                    checked={agreeTerms}
-                    onChange={() => setAgreeTerms(!agreeTerms)}
-                    className="mr-2"
-                  />
-                  <label htmlFor="agreeTerms" className="text-sm">
-                    Concordo com os <a href="#" className="text-primary hover:underline">Termos e Condições</a>
-                  </label>
-                </div>
-                {errors.terms && (
-                  <div className="form-error">{errors.terms}</div>
-                )}
-              </div>
-              
-              <div className="flex space-x-4 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-1 btn-outline"
-                >
-                  Voltar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 btn-primary"
-                >
-                  {isLoading ? 'Cadastrando...' : 'Cadastrar'}
-                </button>
-              </div>
-            </>
-          )}
-          
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              Já tem uma conta?{' '}
-              <button 
-                type="button"
-                onClick={onLoginClick} 
-                className="text-primary hover:underline"
-              >
-                Entrar
-              </button>
-            </p>
+        {error && (
+          <div className="bg-red-900 text-white p-3 rounded mb-4">
+            {error}
           </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-300 mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:border-purple-500"
+              placeholder="seu@email.com"
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-gray-300 mb-2" htmlFor="password">
+              Senha
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:border-purple-500"
+              placeholder="******"
+              required
+            />
+          </div>
+          
+          <div className="mb-6">
+            <label className="block text-gray-300 mb-2" htmlFor="confirmPassword">
+              Confirmar Senha
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:border-purple-500"
+              placeholder="******"
+              required
+            />
+          </div>
+          
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'Registrando...' : 'Registrar'}
+          </button>
         </form>
+        
+        <div className="mt-4 text-center">
+          <p className="text-gray-400">
+            Já tem uma conta?{' '}
+            <button 
+              onClick={onSwitchToLogin}
+              className="text-purple-500 hover:text-purple-400 font-medium"
+            >
+              Faça login
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
