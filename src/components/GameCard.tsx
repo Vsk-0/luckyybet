@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface GameCardProps {
   id: number;
   name: string;
-  odds: string;
+  // odds: string; // TS6133: 'odds' is declared but its value is never read.
   provider: string;
   rtp?: number;
   isFavorite: boolean;
@@ -14,14 +14,14 @@ interface GameCardProps {
 const GameCard: React.FC<GameCardProps> = ({
   id,
   name,
-  odds,
+  // odds, // TS6133: 'odds' is declared but its value is never read.
   provider,
   rtp,
   isFavorite,
   onFavoriteToggle,
   onGameSelect
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  // const [isHovered, setIsHovered] = useState(false); // TS6133: 'isHovered' is declared but its value is never read.
   const [imageLoaded, setImageLoaded] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   
@@ -88,8 +88,8 @@ const GameCard: React.FC<GameCardProps> = ({
   return (
     <div 
       className={`game-card ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-500 ease-out`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      // onMouseEnter={() => setIsHovered(true)}
+      // onMouseLeave={() => setIsHovered(false)}
       onClick={() => onGameSelect(id)}
     >
       <div className="game-provider">

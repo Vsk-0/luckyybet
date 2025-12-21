@@ -1,114 +1,113 @@
-import { auth, db } from '../firebaseConfig';
-import {
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  addDoc,
-  Timestamp,
-  DocumentData
-} from 'firebase/firestore';
+import { supabase } from '../supabaseClient';
+import { User } from '@supabase/supabase-js';
 
-// Interface para dados do usuário
+// Interface para dados do usuário (tabela 'users')
 export interface UserData {
-  uid: string;
+  id: string; // Corresponde ao user.id do Supabase
   email: string;
   balance: number;
-  createdAt: Date;
-  updatedAt: Date;
+  is_admin: boolean; // Novo campo para status de admin
+  created_at: string; // Supabase usa created_at (string ISO)
+  updated_at: string;
 }
 
-// Interface para transações
+// Interface para transações (tabela 'transactions')
 export interface Transaction {
-  id?: string;
-  userId: string;
+  id?: number; // Supabase usa ID numérico auto-incrementado
+  user_id: string; // Corresponde ao user.id do Supabase
   type: 'deposit' | 'withdrawal' | 'bet' | 'win';
   amount: number;
   description: string;
   status: 'pending' | 'completed' | 'rejected';
-  createdAt: Date;
+  created_at: string; // Supabase usa created_at (string ISO)
 }
 
-// Criar ou atualizar dados do usuário
-export const createOrUpdateUser = async (uid: string, email: string): Promise<UserData> => {
-  const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
+// Criar dados iniciais do usuário (chamado após o registro)
+export const createInitialUserData = async (user: User): Promise<UserData | null> => {
+  const { data, error } = await supabase
+    .from('users')
+    .insert([
+      {
+        id: user.id,
+        email: user.email,
+        balance: 100, // Saldo inicial para demonstração
+        is_admin: false,
+      },
+    ])
+    .select()
+    .single();
 
-  if (!userSnap.exists()) {
-    // Criar novo usuário se não existir
-    const userData: UserData = {
-      uid,
-      email,
-      balance: 100, // Saldo inicial para demonstração
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    await setDoc(userRef, userData);
-    return userData;
+  if (error) {
+    console.error('Erro ao criar dados iniciais do usuário:', error);
+    return null;
   }
 
-  // Retornar dados existentes
-  return userSnap.data() as UserData;
+  return data as UserData;
 };
 
 // Buscar dados do usuário
 export const getUserData = async (uid: string): Promise<UserData | null> => {
   try {
-    const userRef = doc(db, 'users', uid);
-    const userSnap = await getDoc(userRef);
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', uid)
+      .single();
 
-    if (userSnap.exists()) {
-      const data = userSnap.data();
-      return {
-        ...data,
-        uid,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
-      } as UserData;
+    if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+      console.error('Erro ao buscar dados do usuário:', error);
+      return null;
     }
 
-    return null;
+    return data as UserData | null;
   } catch (error) {
-    console.error('Erro ao buscar dados do usuário:', error);
+    console.error('Erro inesperado ao buscar dados do usuário:', error);
     return null;
   }
 };
 
-// Atualizar saldo do usuário
+// Atualizar saldo do usuário (Atenção: Esta função deve ser protegida por RLS)
 export const updateUserBalance = async (uid: string, newBalance: number): Promise<boolean> => {
   try {
-    const userRef = doc(db, 'users', uid);
-    await setDoc(userRef, {
-      balance: newBalance,
-      updatedAt: new Date()
-    }, { merge: true });
+    const { error } = await supabase
+      .from('users')
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
+      .eq('id', uid);
+
+    if (error) {
+      console.error('Erro ao atualizar saldo:', error);
+      return false;
+    }
 
     return true;
   } catch (error) {
-    console.error('Erro ao atualizar saldo:', error);
+    console.error('Erro inesperado ao atualizar saldo:', error);
     return false;
   }
 };
 
 // Adicionar transação ao histórico
-export const addTransaction = async (transaction: Omit<Transaction, 'id'>): Promise<string | null> => {
+export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'created_at'>): Promise<number | null> => {
   try {
-    const userRef = doc(db, 'users', transaction.userId);
-    const transactionsRef = collection(userRef, 'transactions');
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert([
+        {
+          ...transaction,
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select('id')
+      .single();
 
-    const docRef = await addDoc(transactionsRef, {
-      ...transaction,
-      createdAt: Timestamp.fromDate(transaction.createdAt)
-    });
+    if (error) {
+      console.error('Erro ao adicionar transação:', error);
+      return null;
+    }
 
-    return docRef.id;
+    return data.id;
   } catch (error) {
-    console.error('Erro ao adicionar transação:', error);
+    console.error('Erro inesperado ao adicionar transação:', error);
     return null;
   }
 };
@@ -116,68 +115,64 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>): Prom
 // Buscar histórico de transações
 export const getUserTransactions = async (uid: string): Promise<Transaction[]> => {
   try {
-    const userRef = doc(db, 'users', uid);
-    const transactionsRef = collection(userRef, 'transactions');
-    const q = query(transactionsRef, orderBy('createdAt', 'desc'));
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: false });
 
-    const querySnapshot = await getDocs(q);
-    const transactions: Transaction[] = [];
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao buscar transações:', error);
+      return [];
+    }
 
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      transactions.push({
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate() || new Date()
-      } as Transaction);
-    });
-
-    return transactions;
+    return (data as Transaction[]) || [];
   } catch (error) {
-    console.error('Erro ao buscar transações:', error);
+    console.error('Erro inesperado ao buscar transações:', error);
     return [];
   }
 };
 
-// Criar solicitação de depósito
+// Criar solicitação de depósito (Simulação de Pix)
 export const createDepositRequest = async (
   userId: string,
   amount: number,
   pixKey: string,
   proofImageUrl?: string
-): Promise<string | null> => {
+): Promise<number | null> => {
   try {
-    const userRef = doc(db, 'users', userId);
-    const depositRequestsRef = collection(userRef, 'depositRequests');
+    // 1. Registrar a solicitação de depósito na tabela 'deposit_requests'
+    const { data: depositData, error: depositError } = await supabase
+      .from('deposit_requests')
+      .insert([
+        {
+          user_id: userId,
+          amount,
+          pix_key: pixKey,
+          status: 'pending',
+          proof_image_url: proofImageUrl,
+        },
+      ])
+      .select('id')
+      .single();
 
-    // Construir o objeto de dados, incluindo proofImageUrl apenas se definido
-    const depositData: DocumentData = {
-      userId,
-      amount,
-      pixKey,
-      status: 'pending',
-      createdAt: Timestamp.fromDate(new Date())
-    };
-
-    if (proofImageUrl) {
-      depositData.proofImageUrl = proofImageUrl;
+    if (depositError) {
+      console.error('Erro ao criar solicitação de depósito:', depositError);
+      return null;
     }
 
-    const docRef = await addDoc(depositRequestsRef, depositData);
-
-    // Adicionar também como transação pendente
+    // 2. Adicionar também como transação pendente no histórico
     await addTransaction({
-      userId,
+      user_id: userId,
       type: 'deposit',
       amount,
       description: `Depósito via Pix (${pixKey})`,
       status: 'pending',
-      createdAt: new Date()
     });
 
-    return docRef.id;
+    return depositData.id;
   } catch (error) {
-    console.error('Erro ao criar solicitação de depósito:', error);
+    console.error('Erro inesperado ao criar solicitação de depósito:', error);
     return null;
   }
 };

@@ -18,7 +18,7 @@ export const useUserData = () => {
 
       try {
         setLoading(true);
-        const data = await getUserData(currentUser.uid);
+        const data = await getUserData(currentUser.id);
         setUserData(data);
         setError(null);
       } catch (err) {

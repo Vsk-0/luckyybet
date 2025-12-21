@@ -1,66 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore'; // Import orderBy
+import { supabase } from '../supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { updateUserBalance, addTransaction } from '../services/userService';
 
 interface WithdrawRequest {
-  id: string;
-  userId: string;
+  id: number;
+  user_id: string;
   amount: number;
-  pixKey: string;
+  pix_key: string;
   status: 'pending' | 'approved' | 'rejected';
-  requestedAt: any; // Firestore Timestamp
+  created_at: string; // Supabase timestamp
 }
 
 const AdminPage: React.FC = () => {
   const [requests, setRequests] = useState<WithdrawRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      setLoading(true);
-      try {
-        // Busca na coleção principal /withdrawRequests, ordenando pelos mais recentes
-        const q = query(
-          collection(db, 'withdrawRequests'), 
-          where('status', '==', 'pending'),
-          orderBy('requestedAt', 'desc') // Ordena pelos mais recentes primeiro
-        );
-        const querySnapshot = await getDocs(q);
-        const fetchedRequests: WithdrawRequest[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedRequests.push({ id: doc.id, ...doc.data() } as WithdrawRequest);
-        });
-        setRequests(fetchedRequests);
-      } catch (error) {
-        console.error('Erro ao buscar solicitações de saque:', error);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar as solicitações de saque pendentes.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      // Busca na tabela 'withdraw_requests', ordenando pelos mais recentes
+      const { data, error } = await supabase
+        .from('withdraw_requests')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
+      if (error) throw error;
+
+      setRequests(data as WithdrawRequest[]);
+    } catch (error) {
+      console.error('Erro ao buscar solicitações de saque:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as solicitações de saque pendentes.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRequests();
   }, [toast]);
 
-  const handleUpdateRequest = async (id: string, newStatus: 'approved' | 'rejected') => {
-    setProcessingId(id);
+  const handleUpdateRequest = async (request: WithdrawRequest, newStatus: 'approved' | 'rejected') => {
+    setProcessingId(request.id);
     try {
-      // Atualiza o documento na coleção principal /withdrawRequests
-      const requestDocRef = doc(db, 'withdrawRequests', id);
-      await updateDoc(requestDocRef, { status: newStatus });
+      // 1. Atualiza o status na tabela 'withdraw_requests'
+      const { error: updateError } = await supabase
+        .from('withdraw_requests')
+        .update({ status: newStatus })
+        .eq('id', request.id);
 
-      // Remove a solicitação da lista local após aprovar/rejeitar
-      setRequests(prevRequests => prevRequests.filter(req => req.id !== id));
+      if (updateError) throw updateError;
+
+      // 2. Se aprovado, atualiza o saldo do usuário e registra a transação
+      if (newStatus === 'approved') {
+        // Em um cenário real, isso seria feito com uma função de banco de dados
+        // para garantir a atomicidade. Aqui, simulamos a lógica de negócio.
+        
+        // Busca o saldo atual (necessário para o update)
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('balance')
+          .eq('id', request.user_id)
+          .single();
+
+        if (userError || !userData) throw new Error('Usuário não encontrado.');
+
+        const newBalance = userData.balance - request.amount;
+        
+        // Atualiza o saldo
+        const success = await updateUserBalance(request.user_id, newBalance);
+        if (!success) throw new Error('Falha ao atualizar saldo do usuário.');
+
+        // Registra a transação de saque como concluída
+        await addTransaction({
+          user_id: request.user_id,
+          type: 'withdrawal',
+          amount: request.amount,
+          description: `Saque via Pix (${request.pix_key})`,
+          status: 'completed',
+        });
+      }
+      
+      // 3. Remove a solicitação da lista local
+      setRequests(prevRequests => prevRequests.filter(req => req.id !== request.id));
 
       toast({
         title: 'Sucesso',
@@ -101,11 +133,11 @@ const AdminPage: React.FC = () => {
           <TableBody>
             {requests.map((req) => (
               <TableRow key={req.id}>
-                <TableCell>{req.requestedAt?.toDate()?.toLocaleString('pt-BR') ?? 'N/A'}</TableCell>
+                <TableCell>{new Date(req.created_at).toLocaleString('pt-BR')}</TableCell>
                 {/* Truncar User ID para melhor visualização se necessário */}
-                <TableCell className="truncate max-w-[100px]" title={req.userId}>{req.userId}</TableCell> 
+                <TableCell className="truncate max-w-[100px]" title={req.user_id}>{req.user_id}</TableCell> 
                 <TableCell>{req.amount.toFixed(2)}</TableCell>
-                <TableCell>{req.pixKey}</TableCell>
+                <TableCell>{req.pix_key}</TableCell>
                 <TableCell>
                   <Badge variant={'secondary'}> {/* Sempre será pending aqui */}
                     Pendente
@@ -115,7 +147,7 @@ const AdminPage: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleUpdateRequest(req.id, 'approved')}
+                    onClick={() => handleUpdateRequest(req, 'approved')}
                     disabled={processingId === req.id}
                   >
                     {processingId === req.id ? 'Processando...' : 'Aprovar'}
@@ -123,7 +155,7 @@ const AdminPage: React.FC = () => {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => handleUpdateRequest(req.id, 'rejected')}
+                    onClick={() => handleUpdateRequest(req, 'rejected')}
                     disabled={processingId === req.id}
                   >
                     {processingId === req.id ? 'Processando...' : 'Rejeitar'}
@@ -139,4 +171,3 @@ const AdminPage: React.FC = () => {
 };
 
 export default AdminPage;
-

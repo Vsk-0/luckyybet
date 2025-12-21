@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+// import { initializeApp } from "firebase/app"; // Removido após migração para Supabase
+// import { getAuth } from "firebase/auth"; // Removido após migração para Supabase
+// import { getFirestore } from "firebase/firestore"; // Removido após migração para Supabase
 
 // Configuração do Firebase usando variáveis de ambiente
 // Certifique-se de criar um arquivo .env na raiz do projeto com as seguintes variáveis:
@@ -11,7 +11,7 @@ import { getFirestore } from "firebase/firestore";
 // VITE_FIREBASE_MESSAGING_SENDER_ID=SEU_SENDER_ID
 // VITE_FIREBASE_APP_ID=SEU_APP_ID
 
-const firebaseConfig = {
+// const firebaseConfig = { // Removido após migração para Supabase
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -21,9 +21,9 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// const app = initializeApp(firebaseConfig); // Removido após migração para Supabase
+// const auth = getAuth(app); // Removido após migração para Supabase
+// const db = getFirestore(app); // Removido após migração para Supabase
 
-export { app, auth, db };
+// export { app, auth, db }; // Removido após migração para Supabase
 

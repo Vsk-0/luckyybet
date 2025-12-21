@@ -1,20 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  User, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { auth, db } from '../firebaseConfig'; // Import db as well
-import { doc, getDoc } from 'firebase/firestore'; // Import Firestore functions
+import { User } from '@supabase/supabase-js';
+import { supabase } from '../supabaseClient';
 
 interface AuthContextType {
   currentUser: User | null;
-  isAdmin: boolean; // Add isAdmin state
+  isAdmin: boolean;
   loading: boolean;
-  register: (email: string, password: string) => Promise<User>;
-  login: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string) => Promise<User | null>;
+  login: (email: string, password: string) => Promise<User | null>;
   logout: () => Promise<void>;
 }
 
@@ -34,59 +27,71 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false); // State for admin status
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
-  // Registrar novo usuário
-  const register = async (email: string, password: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // TODO: Consider creating user document in Firestore upon registration
-    return userCredential.user;
+  // Registrar novo usuário com Supabase
+  const register = async (email: string, password: string): Promise<User | null> => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data.user;
   };
 
-  // Login de usuário
-  const login = async (email: string, password: string) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+  // Login de usuário com Supabase
+  const login = async (email: string, password: string): Promise<User | null> => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data.user;
   };
 
-  // Logout de usuário
-  const logout = () => {
-    setIsAdmin(false); // Reset admin status on logout
-    return signOut(auth);
+  // Logout de usuário com Supabase
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw new Error(error.message);
+    }
+    setIsAdmin(false);
   };
 
-  // Observar mudanças no estado de autenticação e buscar status de admin
+  // Observar mudanças no estado de autenticação
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        // If user is logged in, check their admin status in Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists() && userDoc.data()?.isAdmin === true) {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
-        } catch (error) {
-          console.error('Erro ao buscar status de admin:', error);
-          setIsAdmin(false); // Assume not admin if error occurs
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user ?? null;
+        setCurrentUser(user);
+        
+        if (user) {
+          // Simplificação: A lógica de admin será tratada por RLS e um serviço
+          // Para fins de migração, vamos assumir que o status de admin será buscado
+          // em um serviço separado ou via claims, mas por enquanto, simplificamos.
+          // TODO: Implementar lógica de verificação de admin via Supabase RLS/Function
+          
+          // Exemplo de como buscar dados de perfil para verificar admin (será implementado em userService)
+          // const { data: profile } = await supabase.from('users').select('is_admin').eq('id', user.id).single();
+          // setIsAdmin(profile?.is_admin || false);
+          
+          // Por enquanto, apenas um placeholder:
+          setIsAdmin(user.email === 'admin@luckyybet.com'); // Placeholder simples
+        } else {
+          setIsAdmin(false);
         }
-      } else {
-        // If user is logged out, reset admin status
-        setIsAdmin(false);
+        
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    );
 
-    return unsubscribe;
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const value = {
     currentUser,
-    isAdmin, // Provide isAdmin in context
+    isAdmin,
     loading,
     register,
     login,
@@ -99,4 +104,3 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
-

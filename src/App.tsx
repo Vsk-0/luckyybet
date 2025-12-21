@@ -9,6 +9,7 @@ import AdminPage from './pages/AdminPage'; // Importar a página de administraç
 import WithdrawPage from './pages/WithdrawPage'; // Importar a página de saque
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
+import { Disclaimer } from './components/Disclaimer';
 
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -27,6 +28,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <Disclaimer />
       {/* Header */}
       <header className="bg-gray-800 shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">

@@ -7,7 +7,7 @@ const DepositPage = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [amount, setAmount] = useState('');
-  const [pixKey, setPixKey] = useState(''); // Pode ser pré-definida ou gerada
+  // const [pixKey, setPixKey] = useState(''); // TS6133: 'pixKey' and 'setPixKey' are declared but their values are never read.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -38,7 +38,7 @@ const DepositPage = () => {
 
     setLoading(true);
     try {
-      const depositId = await createDepositRequest(currentUser.uid, depositAmount, fixedPixKey);
+      const depositId = await createDepositRequest(currentUser.id, depositAmount, fixedPixKey);
       if (depositId) {
         setSuccess('Solicitação de depósito enviada com sucesso! Aguarde a confirmação.');
         setAmount('');
