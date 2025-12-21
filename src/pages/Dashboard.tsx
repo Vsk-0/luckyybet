@@ -15,7 +15,7 @@ const Dashboard = () => {
       
       try {
         setLoading(true);
-        const userTransactions = await getUserTransactions(currentUser.uid);
+        const userTransactions = await getUserTransactions(currentUser.id);
         setTransactions(userTransactions);
       } catch (error) {
         console.error('Erro ao buscar transações:', error);

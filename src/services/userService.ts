@@ -22,28 +22,7 @@ export interface Transaction {
   created_at: string; // Supabase usa created_at (string ISO)
 }
 
-// Criar dados iniciais do usuário (chamado após o registro)
-export const createInitialUserData = async (user: User): Promise<UserData | null> => {
-  const { data, error } = await supabase
-    .from('users')
-    .insert([
-      {
-        id: user.id,
-        email: user.email,
-        balance: 100, // Saldo inicial para demonstração
-        is_admin: false,
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Erro ao criar dados iniciais do usuário:', error);
-    return null;
-  }
-
-  return data as UserData;
-};
+// A criação de dados iniciais do usuário (tabela 'users') é agora gerenciada por um trigger no Supabase após o registro.
 
 // Buscar dados do usuário
 export const getUserData = async (uid: string): Promise<UserData | null> => {

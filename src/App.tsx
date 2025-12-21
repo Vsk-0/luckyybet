@@ -10,10 +10,15 @@ import WithdrawPage from './pages/WithdrawPage'; // Importar a página de saque
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import { Disclaimer } from './components/Disclaimer';
+import AgeVerificationModal from './components/AgeVerificationModal';
+import PromotionCarousel from './components/PromotionCarousel';
+import ActivityFeed from './components/ActivityFeed';
+import GameCategories from './components/GameCategories';
 
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isAgeVerified, setIsAgeVerified] = useState(false);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate(); // Usar useNavigate para navegação programática
 
@@ -27,6 +32,9 @@ function App() {
   };
 
   return (
+    <>
+      <AgeVerificationModal onVerified={() => setIsAgeVerified(true)} />
+      {isAgeVerified && (
     <div className="min-h-screen bg-gray-900 text-white">
       <Disclaimer />
       {/* Header */}
@@ -76,27 +84,84 @@ function App() {
         <Routes>
           <Route path="/" element={
             <div className="container mx-auto px-4 py-8">
-              <h1 className="text-4xl font-bold text-center mb-8 text-purple-500">Bem-vindo ao LuckyYBet</h1>
-              <p className="text-xl text-center mb-8">O melhor site de apostas simuladas!</p>
+              <h1 className="text-4xl font-bold text-center mb-2 text-purple-500">Bem-vindo ao LuckyYBet</h1>
+              <p className="text-xl text-center mb-8 text-gray-400">Plataforma de Simulação Educacional de Jogos</p>
               
-              {/* Seção de jogos aqui */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Exemplo de card de jogo */}
-                <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition">
-                  <img 
-                    src="https://via.placeholder.com/400x200" 
-                    alt="Fortune Tiger" 
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold mb-2 text-purple-400">Fortune Tiger</h3>
-                    <p className="text-gray-400 mb-4">Jogue o famoso Fortune Tiger e teste sua sorte!</p>
-                    <button 
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition"
-                      onClick={() => currentUser ? null : setIsLoginModalOpen(true)} // Ajustar lógica de jogo depois
-                    >
-                      Jogar Agora
-                    </button>
+              {/* Carrossel de Promoções */}
+              <PromotionCarousel />
+              
+              {/* Layout com Grid: Categorias e Feed */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                {/* Categorias de Jogos */}
+                <div className="lg:col-span-2">
+                  <GameCategories onCategoryClick={(id) => console.log('Categoria:', id)} />
+                </div>
+                
+                {/* Feed de Atividades */}
+                <div className="lg:col-span-1">
+                  <ActivityFeed />
+                </div>
+              </div>
+              
+              {/* Seção de Jogos Populares */}
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold mb-6 text-white">🎮 Jogos Populares</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Card de Jogo 1 */}
+                  <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-700">
+                    <img 
+                      src="https://via.placeholder.com/400x200/6b46c1/ffffff?text=Fortune+Tiger" 
+                      alt="Fortune Tiger" 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="text-xl font-bold mb-2 text-purple-400">Fortune Tiger</h3>
+                      <p className="text-gray-400 mb-4 text-sm">O jogo mais popular! Teste sua sorte com o tigre da fortuna.</p>
+                      <button 
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                        onClick={() => currentUser ? null : setIsLoginModalOpen(true)}
+                      >
+                        Jogar Agora
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Card de Jogo 2 */}
+                  <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-700">
+                    <img 
+                      src="https://via.placeholder.com/400x200/ef4444/ffffff?text=Aviator" 
+                      alt="Aviator" 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="text-xl font-bold mb-2 text-red-400">Aviator</h3>
+                      <p className="text-gray-400 mb-4 text-sm">Decole e multiplique seus ganhos antes do avião desaparecer!</p>
+                      <button 
+                        className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                        onClick={() => currentUser ? null : setIsLoginModalOpen(true)}
+                      >
+                        Jogar Agora
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Card de Jogo 3 */}
+                  <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-700">
+                    <img 
+                      src="https://via.placeholder.com/400x200/10b981/ffffff?text=Mines" 
+                      alt="Mines" 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="text-xl font-bold mb-2 text-green-400">Mines</h3>
+                      <p className="text-gray-400 mb-4 text-sm">Desvie das minas e acumule prêmios incríveis!</p>
+                      <button 
+                        className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                        onClick={() => currentUser ? null : setIsLoginModalOpen(true)}
+                      >
+                        Jogar Agora
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -157,6 +222,8 @@ function App() {
         }}
       />
     </div>
+      )}
+    </>
   );
 }
 

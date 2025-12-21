@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { createOrUpdateUser } from '../services/userService';
+// import { createOrUpdateUser } from '../services/userService'; // Removido: A criação de dados iniciais deve ser feita via trigger no Supabase
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -42,8 +42,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) =>
       // Login com Firebase
       const user = await login(email, password);
       
-      // Buscar ou criar dados do usuário no Firestore
-      await createOrUpdateUser(user.uid, user.email || '');
+      // A criação de dados iniciais do usuário é agora gerenciada por um trigger no Supabase após o registro.
       
       onClose();
     } catch (err: any) {
