@@ -116,7 +116,7 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-gray-300">
-                      {transaction.createdAt.toLocaleDateString('pt-BR')}
+                      {new Date(transaction.created_at).toLocaleDateString("pt-BR")}
                     </td>
                   </tr>
                 ))}

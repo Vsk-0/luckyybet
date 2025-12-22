@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { verificarLimiteAposta } from '../services/responsibleGaming';
-import { Loader2, RefreshCw, DollarSign, XCircle, CheckCircle } from 'lucide-react';
+import { Loader2, RefreshCw, DollarSign, XCircle } from 'lucide-react';
 
 // Constantes do Jogo
 const SYMBOLS = ['🐯', '💰', '🎋', '🍊', '🍇'];

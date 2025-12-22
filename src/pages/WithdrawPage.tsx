@@ -34,7 +34,7 @@ const WithdrawPage: React.FC = () => {
     setLoading(true);
     try {
       // Inserir solicitação de saque na tabela withdraw_requests
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('withdraw_requests')
         .insert([
           {

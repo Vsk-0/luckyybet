@@ -40,7 +40,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) =>
       setLoading(true);
       
       // Login com Firebase
-      const user = await login(email, password);
+      await login(email, password);
       
       // A criação de dados iniciais do usuário é agora gerenciada por um trigger no Supabase após o registro.
       

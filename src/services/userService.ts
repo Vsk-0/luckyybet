@@ -1,5 +1,4 @@
 import { supabase } from '../supabaseClient';
-import { User } from '@supabase/supabase-js';
 
 // Interface para dados do usuário (tabela 'users')
 export interface UserData {

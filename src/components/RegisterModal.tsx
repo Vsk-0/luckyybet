@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import KYCModal from './KYCModal';
 import { useAuth } from '../context/AuthContext';
 // import { createOrUpdateUser } from '../services/userService'; // Removido: A criação de dados iniciais deve ser feita via trigger no Supabase
@@ -49,7 +49,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onSuccess }: Register
       setLoading(true);
       
       // Registro com Firebase
-      const user = await register(email, password);
+      await register(email, password);
       
       // A criação de dados iniciais do usuário é agora gerenciada por um trigger no Supabase após o registro.
       
@@ -182,8 +182,6 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onSuccess }: Register
         }}
       />
     </>
-  );
-
   );
 };
 

@@ -11,16 +11,13 @@
 // VITE_FIREBASE_MESSAGING_SENDER_ID=SEU_SENDER_ID
 // VITE_FIREBASE_APP_ID=SEU_APP_ID
 
-// const firebaseConfig = { // Removido após migração para Supabase
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-// Initialize Firebase
+// const firebaseConfig = { // Removido após migração para Su//   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+//   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+//   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+//   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+//   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+//   appId: import.meta.env.VITE_FIREBASE_APP_ID
+// };lize Firebase
 // const app = initializeApp(firebaseConfig); // Removido após migração para Supabase
 // const auth = getAuth(app); // Removido após migração para Supabase
 // const db = getFirestore(app); // Removido após migração para Supabase

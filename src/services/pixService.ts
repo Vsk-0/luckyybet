@@ -69,8 +69,6 @@ export const generatePixPayment = async (
   }
 
   try {
-): Promise<PixPaymentResponse> => {
-  try {
     // SIMULAÇÃO: Em produção, fazer chamada à API do gateway
     const simulatedTransactionId = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const simulatedPixKey = process.env.VITE_PIX_KEY || 'chave-pix-luckyybet@exemplo.com';
@@ -79,7 +77,7 @@ export const generatePixPayment = async (
     const simulatedQrCode = `00020126580014br.gov.bcb.pix0136${simulatedPixKey}520400005303986540${request.amount.toFixed(2)}5802BR5913LuckyYBet6009SAO PAULO62070503***6304`;
     
     // Registrar a transação pendente no banco de dados
-    const { data: depositData, error: depositError } = await supabase
+    const { error: depositError } = await supabase
       .from('deposit_requests')
       .insert([
         {

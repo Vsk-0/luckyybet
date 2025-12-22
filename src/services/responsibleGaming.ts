@@ -331,7 +331,7 @@ export const ativarAutoexclusao = async (
 export const verificarAutoexclusao = async (userId: string): Promise<boolean> => {
   try {
     const limites = await getLimitesUsuario(userId);
-    return limites.autoexclusao_ate !== null && new Date() < limites.autoexclusao_ate;
+    return limites.autoexclusao_ate !== null && limites.autoexclusao_ate !== undefined && new Date() < limites.autoexclusao_ate;
   } catch (error) {
     console.error('Erro ao verificar autoexclusão:', error);
     return false;
