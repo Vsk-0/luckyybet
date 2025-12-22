@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import DepositPage from './pages/DepositPage'; // Importar a página de depósito
 import AdminPage from './pages/AdminPage'; // Importar a página de administração
 import WithdrawPage from './pages/WithdrawPage'; // Importar a página de saque
+import FortuneTiger from './games/FortuneTiger'; // Importar o novo jogo
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import { Disclaimer } from './components/Disclaimer';
@@ -94,7 +95,7 @@ function App() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 {/* Categorias de Jogos */}
                 <div className="lg:col-span-2">
-                  <GameCategories onCategoryClick={(id) => console.log('Categoria:', id)} />
+	                  <GameCategories onCategoryClick={(id) => console.log('Categoria:', id)} />
                 </div>
                 
                 {/* Feed de Atividades */}
@@ -115,14 +116,14 @@ function App() {
                       className="w-full h-48 object-cover"
                     />
                     <div className="p-4">
-                      <h3 className="text-xl font-bold mb-2 text-purple-400">Fortune Tiger</h3>
-                      <p className="text-gray-400 mb-4 text-sm">O jogo mais popular! Teste sua sorte com o tigre da fortuna.</p>
-                      <button 
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-                        onClick={() => currentUser ? null : setIsLoginModalOpen(true)}
-                      >
-                        Jogar Agora
-                      </button>
+	                      <h3 className="text-xl font-bold mb-2 text-purple-400">Fortune Tiger</h3>
+	                      <p className="text-gray-400 mb-4 text-sm">O jogo mais popular! Teste sua sorte com o tigre da fortuna.</p>
+	                      <button 
+	                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+	                        onClick={() => navigate('/game/fortune-tiger')}
+	                      >
+	                        Jogar Agora
+	                      </button>
                     </div>
                   </div>
                   
@@ -173,8 +174,17 @@ function App() {
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
-          />
+	            } 
+	          />
+	          {/* Adicionar rota para o jogo Fortune Tiger */}
+	          <Route 
+	            path="/game/fortune-tiger" 
+	            element={
+	              <ProtectedRoute>
+	                <FortuneTiger />
+	              </ProtectedRoute>
+	            } 
+	          />
           {/* Adicionar rota para a página de depósito */}
           <Route 
             path="/deposit" 
@@ -216,6 +226,10 @@ function App() {
       <RegisterModal 
         isOpen={isRegisterModalOpen} 
         onClose={() => setIsRegisterModalOpen(false)} 
+        onSuccess={() => {
+          setIsRegisterModalOpen(false);
+          navigate('/dashboard'); // Redireciona após KYC
+        }}
         onSwitchToLogin={() => {
           setIsRegisterModalOpen(false);
           setIsLoginModalOpen(true);

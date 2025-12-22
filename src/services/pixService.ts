@@ -13,6 +13,7 @@ import { supabase } from '../supabaseClient';
 
 export interface PixPaymentRequest {
   userId: string;
+  isKycVerified: boolean;
   amount: number;
   description: string;
   userEmail: string;
@@ -58,6 +59,16 @@ export interface PixWebhookPayload {
  */
 export const generatePixPayment = async (
   request: PixPaymentRequest
+): Promise<PixPaymentResponse> => {
+  // 1. VERIFICAÇÃO DE KYC
+  if (!request.isKycVerified) {
+    return {
+      success: false,
+      error: 'KYC não verificado. Por favor, complete a verificação de identidade para depositar.',
+    };
+  }
+
+  try {
 ): Promise<PixPaymentResponse> => {
   try {
     // SIMULAÇÃO: Em produção, fazer chamada à API do gateway

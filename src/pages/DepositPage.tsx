@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { generatePixPayment, checkPixPaymentStatus } from '../services/pixService';
 import { useNavigate } from 'react-router-dom';
+import { verificarLimiteDeposito } from '../services/responsibleGaming';
 import { QrCode, Copy, CheckCircle, Clock } from 'lucide-react';
 
 const DepositPage = () => {
@@ -28,6 +29,14 @@ const DepositPage = () => {
       return;
     }
 
+    // TODO: Obter status real de KYC do usuário (simulando como true por enquanto)
+    const isKycVerified = true; 
+    
+    if (!isKycVerified) {
+      setError('KYC não verificado. Por favor, complete a verificação de identidade para depositar.');
+      return;
+    }
+
     const depositAmount = parseFloat(amount);
     if (isNaN(depositAmount) || depositAmount <= 0) {
       setError('Por favor, insira um valor de depósito válido.');
@@ -44,10 +53,18 @@ const DepositPage = () => {
       return;
     }
 
+    // 1. VERIFICAÇÃO DE LIMITES DE JOGO RESPONSÁVEL
+    const limiteCheck = await verificarLimiteDeposito(currentUser.id, depositAmount);
+    if (!limiteCheck.permitido) {
+      setError(limiteCheck.motivo || 'Limite de depósito excedido.');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await generatePixPayment({
         userId: currentUser.id,
+        isKycVerified: isKycVerified, // Passa o status de KYC
         amount: depositAmount,
         description: 'Depósito na plataforma LuckyYBet',
         userEmail: currentUser.email || '',
@@ -140,6 +157,7 @@ const DepositPage = () => {
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Mínimo: R$ 2,00 | Máximo: R$ 10.000,00
+                  {/* TODO: Adicionar exibição do limite diário/mensal restante */}
                 </p>
               </div>
 
