@@ -6,6 +6,7 @@ export interface UserData {
   email: string;
   balance: number;
   is_admin: boolean; // Novo campo para status de admin
+  kyc_status?: 'pending' | 'approved' | 'rejected' | 'not_started';
   created_at: string; // Supabase usa created_at (string ISO)
   updated_at: string;
 }
@@ -26,18 +27,31 @@ export interface Transaction {
 // Buscar dados do usuário
 export const getUserData = async (uid: string): Promise<UserData | null> => {
   try {
-    const { data, error } = await supabase
+    // Buscar dados básicos do usuário
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', uid)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
-      console.error('Erro ao buscar dados do usuário:', error);
+    if (userError && userError.code !== 'PGRST116') {
+      console.error('Erro ao buscar dados do usuário:', userError);
       return null;
     }
 
-    return data as UserData | null;
+    if (!user) return null;
+
+    // Buscar status de KYC
+    const { data: kyc } = await supabase
+      .from('user_kyc')
+      .select('status_verificacao')
+      .eq('user_id', uid)
+      .single();
+
+    return {
+      ...user,
+      kyc_status: kyc ? kyc.status_verificacao : 'not_started'
+    } as UserData;
   } catch (error) {
     console.error('Erro inesperado ao buscar dados do usuário:', error);
     return null;

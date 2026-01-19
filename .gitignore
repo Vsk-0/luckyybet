@@ -26,3 +26,5 @@ yarn-error.log*
 *.sln
 *.sw?
 
+.vercel
+.env*.local

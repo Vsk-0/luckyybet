@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Observar mudanças no estado de autenticação
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         const user = session?.user ?? null;
         setCurrentUser(user);
         

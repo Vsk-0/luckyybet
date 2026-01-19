@@ -1,88 +1,177 @@
-# 🎰 LuckyYBet - Plataforma de Simulação de Jogos e Educação Financeira
+# Supabase CLI
 
-> ⚠️ **AVISO IMPORTANTE:** Este é um projeto de **SIMULAÇÃO EDUCACIONAL** desenvolvido para o [Nome do Concurso Escolar]. **Não envolve dinheiro real, não possui fins lucrativos e não é uma plataforma de apostas real.** O objetivo é demonstrar a arquitetura de sistemas complexos e promover a educação sobre gestão de risco e probabilidade em um ambiente controlado.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## 📋 Sobre o Projeto
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-LuckyYBet é uma plataforma web que simula a experiência de jogos de cassino online. O foco do projeto é técnico e educacional, servindo como uma prova de conceito para:
+This repository contains all the functionality for Supabase CLI.
 
-1.  **Segurança de Sistemas:** Demonstração de como proteger a lógica de negócio (cálculo de saldo e resultados) em um backend seguro (Supabase).
-2.  **Arquitetura Moderna:** Utilização de uma stack de desenvolvimento de ponta (React, TypeScript, Supabase) para construir uma aplicação escalável.
-3.  **Educação Financeira:** Uso da simulação para ensinar conceitos de probabilidade, gestão de banca e jogo responsável.
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-### 🎯 Objetivos para o Concurso
+## Getting started
 
-- **Conformidade:** Reforçar o caráter de simulação para atender às exigências do concurso.
-- **Segurança:** Migrar para Supabase para resolver as vulnerabilidades críticas de segurança do protótipo inicial.
-- **Qualidade:** Entregar um código limpo, funcional e com testes básicos.
+### Install the CLI
 
-## 🚀 Tecnologias Utilizadas
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
-| Categoria | Tecnologia | Propósito |
-| :--- | :--- | :--- |
-| **Frontend** | React 18, TypeScript, Vite | Interface de usuário moderna e tipada. |
-| **Estilização** | Tailwind CSS, Radix UI | Design responsivo, acessível e rápido. |
-| **Backend** | **Supabase** (PostgreSQL) | Banco de dados, autenticação e lógica de negócio segura (via RLS e Edge Functions). |
-| **Roteamento** | React Router v7 | Navegação entre páginas. |
+```bash
+npm i supabase --save-dev
+```
 
-## 📦 Instalação e Execução
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
-### Pré-requisitos
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
 
-- Node.js 18+
-- pnpm (ou npm)
-- Conta Supabase (para obter as chaves de API)
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
 
-### Passo a Passo
+<details>
+  <summary><b>macOS</b></summary>
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/Vsk-0/luckyybet.git
-    cd luckyybet
-    ```
+  Available via [Homebrew](https://brew.sh). To install:
 
-2.  **Instale dependências:**
-    ```bash
-    pnpm install
-    ```
+  ```sh
+  brew install supabase/tap/supabase
+  ```
 
-3.  **Configure o Supabase:**
-    - Crie um projeto no [Supabase Dashboard](https://app.supabase.com/).
-    - Obtenha o `Project URL` e a `anon public key`.
-    - Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
-    ```env
-    VITE_SUPABASE_URL="SEU_PROJECT_URL_AQUI"
-    VITE_SUPABASE_ANON_KEY="SUA_ANON_PUBLIC_KEY_AQUI"
-    ```
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
 
-4.  **Execute em desenvolvimento:**
-    ```bash
-    pnpm dev
-    ```
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
 
-5.  **Build para produção:**
-    ```bash
-    pnpm build
-    ```
+<details>
+  <summary><b>Windows</b></summary>
 
-## ⚠️ Limitações Conhecidas e Próximos Passos
+  Available via [Scoop](https://scoop.sh). To install:
 
-O projeto está em fase de refatoração. As principais limitações atuais são:
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
 
-- **Migração em Andamento:** A migração completa do Firebase para o Supabase ainda está em curso.
-- **Testes:** A cobertura de testes automatizados é mínima e será expandida.
-- **CI/CD:** Os workflows de Integração Contínua (CI) ainda não foram configurados.
+  To upgrade:
 
-## ⚖️ Disclaimers Legais
+  ```powershell
+  scoop update supabase
+  ```
+</details>
 
-- Este projeto é estritamente para fins de demonstração técnica e educacional.
-- Não há troca de dinheiro real. Todos os valores e transações são simulados.
-- O projeto não possui licença para operar como uma plataforma de jogos de azar real.
-- **Proibido para menores de 18 anos** (mesmo sendo simulação, o tema exige responsabilidade).
+<details>
+  <summary><b>Linux</b></summary>
 
-## 👨‍💻 Autor
+  Available via [Homebrew](https://brew.sh) and Linux packages.
 
-[Seu Nome] - [Sua Escola]
+  #### via Homebrew
 
----
-*Este README será atualizado à medida que as fases de refatoração forem concluídas.*
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
+```bash
+supabase bootstrap
+```
+
+Or using npx:
+
+```bash
+npx supabase bootstrap
+```
+
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
+```

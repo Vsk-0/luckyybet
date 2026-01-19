@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useUserData } from '../hooks/useUserData';
 import { generatePixPayment, checkPixPaymentStatus } from '../services/pixService';
 import { useNavigate } from 'react-router-dom';
 import { verificarLimiteDeposito } from '../services/responsibleGaming';
@@ -7,6 +8,7 @@ import { QrCode, Copy, CheckCircle, Clock } from 'lucide-react';
 
 const DepositPage = () => {
   const { currentUser } = useAuth();
+  const { userData } = useUserData();
   const navigate = useNavigate();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,11 +31,11 @@ const DepositPage = () => {
       return;
     }
 
-    // TODO: Obter status real de KYC do usuário (simulando como true por enquanto)
-    const isKycVerified = true; 
+    // Verificação real de KYC do usuário
+    const isKycVerified = userData?.kyc_status === 'approved'; 
     
     if (!isKycVerified) {
-      setError('KYC não verificado. Por favor, complete a verificação de identidade para depositar.');
+      setError('Sua identidade ainda não foi verificada ou está pendente. Por favor, complete o KYC para depositar.');
       return;
     }
 
